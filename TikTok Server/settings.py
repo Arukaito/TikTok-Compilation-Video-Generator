@@ -29,6 +29,10 @@ videoGeneratorFTPUser = "VidGen"
 videoGeneratorFTPPassword = "password"
 
 
+driveuser = "duser"
+drivepass = "dpass"
+drivedirectory = "filedir"
+
 databasehost = "localhost"
 databaseuser = "root"
 databasepassword = ""

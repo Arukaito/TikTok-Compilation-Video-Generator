@@ -11,6 +11,7 @@ import subprocess
 import settings
 from time import sleep
 from pymediainfo import MediaInfo
+import random
 
 
 forceStop = False
@@ -56,22 +57,23 @@ def getAllClips(filter, amount, window):
             duration = None
             hashtags = None
 
+
             if typeofrequest == "Hashtag":
-                videoURL = tiktok["itemInfos"]["video"]["urls"][0]
-                author = tiktok["musicInfos"]["authorName"]
-                vidId = tiktok["itemInfos"]["id"]
-                createTime = tiktok["itemInfos"]["createTime"]
-                text = tiktok["itemInfos"]["text"]
-                diggCount = tiktok["itemInfos"]["diggCount"]
-                shareCount = tiktok["itemInfos"]["shareCount"]
-                playCount = tiktok["itemInfos"]["playCount"]
-                commentCount = tiktok["itemInfos"]["commentCount"]
-                duration = tiktok["itemInfos"]["video"]["videoMeta"]["duration"]
+                videoURL = tiktok["video"]["downloadAddr"]
+                author = tiktok["author"]['nickname']
+                vidId = tiktok["id"]
+                createTime = tiktok["createTime"]
+                text = tiktok["desc"]
+                diggCount = tiktok["stats"]["diggCount"]
+                shareCount = tiktok["stats"]["shareCount"]
+                playCount = tiktok["stats"]["playCount"]
+                commentCount = tiktok["stats"]["commentCount"]
+                duration = tiktok["video"]["duration"]
                 hashtags = []
                 for hashtag in tiktok["textExtra"]:
-                    tag = hashtag["HashtagName"]
+                    tag = hashtag["hashtagName"]
                     if not tag == "":
-                        hashtags.append(hashtag["HashtagName"])
+                        hashtags.append(hashtag["hashtagName"])
             elif typeofrequest == "Author" or typeofrequest == "Trending":
                 try:
                     videoURL = tiktok["video"]["downloadAddr"]
@@ -132,10 +134,13 @@ def getAllClips(filter, amount, window):
 
     searchAmount = amount
 
+
     while True:
         try:
             api = TikTokApi()
 
+            did = str(random.randint(10000, 999999999))
+            
             # The Number of trending TikToks you want to be displayed
 
             new_ids = []
@@ -207,16 +212,27 @@ def getAllClips(filter, amount, window):
 
 def autoDownloadClips(filterName, clips, window):
     global forceStop
+    did = str(random.randint(10000, 999999999))
     #Downloading the clips with custom naming scheme
     window.update_log_start_downloading_game.emit(filterName, len(clips))
     print('Downloading...')
     for i, clip in enumerate(clips):
         print("Downloading Clip %s/%s" % (i + 1, len(clips)))
         try:
-            opener = urllib.request.build_opener()
-            opener.addheaders = [('User-agent', 'okhttp'), ('referer', 'https://www.tiktok.com/')]
-            urllib.request.install_opener(opener)
-            urllib.request.urlretrieve(clip.url, f"{settings.vid_filepath}/{clip.author_name}-{clip.id}.mp4")
+
+
+            # opener = urllib.request.build_opener()
+            # opener.addheaders = [('User-agent', 'okhttp'), ('referer', 'https://www.tiktok.com/')]
+            # urllib.request.install_opener(opener)
+            # urllib.request.urlretrieve(clip.url, f"{settings.vid_filepath}/{clip.author_name}-{clip.id}.mp4")
+            # clip.mp4 = f"{clip.author_name}-{clip.id}"
+    
+            api = TikTokApi()
+            videobytes = api.get_Video_By_DownloadURL(download_url=clip.url,custom_did=did)
+
+            with open(f"{settings.vid_filepath}/{clip.author_name}-{clip.id}.mp4", 'wb') as output:        
+	            output.write(videobytes)
+            
             clip.mp4 = f"{clip.author_name}-{clip.id}"
 
             media_info = MediaInfo.parse(f"{settings.vid_filepath}/{clip.author_name}-{clip.id}.mp4")
